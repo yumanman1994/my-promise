@@ -39,6 +39,4 @@ promise.then(
   }
 )
 
-console.log('------------------------<call real promise>----------------------')
-
 const rPromise = new Promise((resolve, reject) => {})
