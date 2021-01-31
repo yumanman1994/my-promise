@@ -1,44 +1,76 @@
 const PENDING = 'PENDING',
   FULFILLED = 'FULFILLED',
-  REJECTED = 'REJECTED'
+  REJECTED = 'REJECTED';
 
 const resolvePromise = (promise2, x, resolve, reject) => {
-  console.log(promise2, x, resolve, reject)
-}
+  // console.log(promise2, x, resolve, reject);
+  let called = false;
+  /**
+   * 规范 如果promise和x引用同一个对象，用一个TypeError作为原因来拒绝promise
+   *
+   **/
+  if (promise2 === x) {
+    reject(new TypeError('Chaining cycle detected for promise #<Promise>'));
+  }
+
+  if ((typeof x === 'object' && x !== null) || typeof x === 'function') {
+    try {
+      // 判断 返回 的then 是不是 一个 promise
+      const then = x.then;
+      if (typeof then === 'function') {
+        then.call(
+          x,
+          y => {
+            resolvePromise(promise2, y, resolve, reject);
+          },
+          r => {
+            reject(r);
+          }
+        );
+      } else {
+        resolve(x);
+      }
+    } catch (e) {
+      reject(e);
+    }
+  } else {
+    resolve(x);
+  }
+};
 
 class MyPromise {
   constructor(executor) {
-    this.status = PENDING
-    this.value = undefined
-    this.reason = undefined
+    this.status = PENDING;
+    this.value = undefined;
+    this.reason = undefined;
 
-    this.onFulfilledCallbacks = []
-    this.onRejectedCallbacks = []
+    this.onFulfilledCallbacks = [];
+    this.onRejectedCallbacks = [];
 
-    const reject = (reason) => {
+    const reject = reason => {
       if (this.status === PENDING) {
-        this.reason = reason
-        this.status = REJECTED
+        this.reason = reason;
+        this.status = REJECTED;
         // 发布
-        this.onRejectedCallbacks.forEach((onRejectedCallback) =>
+        this.onRejectedCallbacks.forEach(onRejectedCallback =>
           onRejectedCallback()
-        )
+        );
       }
-    }
-    const resolve = (value) => {
+    };
+    const resolve = value => {
       if (this.status === PENDING) {
-        this.value = value
-        this.status = FULFILLED
+        this.value = value;
+        this.status = FULFILLED;
         // 发布
-        this.onFulfilledCallbacks.forEach((onFulfilledCallback) =>
+        this.onFulfilledCallbacks.forEach(onFulfilledCallback =>
           onFulfilledCallback()
-        )
+        );
       }
-    }
+    };
     try {
-      executor(resolve, reject)
+      executor(resolve, reject);
     } catch (error) {
-      reject(error)
+      reject(error);
     }
   }
   /**
@@ -46,7 +78,7 @@ class MyPromise {
    * @param {*} onRejected
    */
   then(onFulfilled, onRejected) {
-    const promise2 = new Promise((resolve, reject) => {
+    const promise2 = new MyPromise((resolve, reject) => {
       if (this.status === FULFILLED) {
         /**
          * 规范中明确要求 onFulfilled onReject 异步执行
@@ -61,23 +93,23 @@ class MyPromise {
            * onFulfilled 也有可能抛出一个异常
            */
           try {
-            const x = onFulfilled(this.value)
+            const x = onFulfilled(this.value);
             // 根据 x的值的不同处理方法
-            resolvePromise(promise2, x, resolve, reject)
+            resolvePromise(promise2, x, resolve, reject);
           } catch (e) {
-            reject(e)
+            reject(e);
           }
-        }, 0)
+        }, 0);
       }
       if (this.status === REJECTED) {
         setTimeout(() => {
           try {
-            const x = onRejected(this.reason)
-            resolvePromise(promise2, x, resolve, reject)
+            const x = onRejected(this.reason);
+            resolvePromise(promise2, x, resolve, reject);
           } catch (e) {
-            reject(e)
+            reject(e);
           }
-        }, 0)
+        }, 0);
       }
       // TODO 处理异步
       /** 如果 then 执行 处于pending 去收集 onFulfilled onRejected */
@@ -86,25 +118,25 @@ class MyPromise {
         //收集 所有的 onFulfilled
         this.onFulfilledCallbacks.push(() => {
           try {
-            const x = onFulfilled(this.value)
-            resolvePromise(promise2, x, resolve, reject)
+            const x = onFulfilled(this.value);
+            resolvePromise(promise2, x, resolve, reject);
           } catch (e) {
-            reject(e)
+            reject(e);
           }
-        })
+        });
         this.onRejectedCallbacks.push(() => {
           try {
-            const x = onRejected(this.reason)
-            resolvePromise(promise2, x, resolve, reject)
+            const x = onRejected(this.reason);
+            resolvePromise(promise2, x, resolve, reject);
           } catch (e) {
-            reject(e)
+            reject(e);
           }
-        })
+        });
       }
-    })
+    });
 
-    return promise2
+    return promise2;
   }
 }
 
-module.exports = MyPromise
+module.exports = MyPromise;

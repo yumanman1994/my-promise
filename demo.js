@@ -1,20 +1,20 @@
 new Promise((resolve, reject) => {
   // resolve('success')
-  reject('error msg')
+  reject('error msg');
 })
-  .then((msg) => {
-    console.log(msg)
+  .then(msg => {
+    console.log(msg);
     return new Promise((resolve, reject) => {
       // resolve('msg2')
-      reject('error msg2')
-    })
+      reject('error msg2');
+    });
   })
-  .then((msg) => {
-    console.log(msg)
+  .then(msg => {
+    console.log(msg);
   })
-  .catch((err) => {
-    console.log(err)
-  })
+  .catch(err => {
+    console.log(err);
+  });
 
 // promise 三种 states pending fulfilled rejected
 /**

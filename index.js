@@ -13,16 +13,22 @@
 //   }
 // )
 
-const MyPromise = require('./my-promise')
+const MyPromise = require('./my-promise');
 
 const promise1 = new MyPromise((resolve, reject) => {
-  // resolve('promise1 reject value')
-  setTimeout(() => {
-    resolve('async promise resolve')
-  })
-}).then((value) => {
-  console.log(value)
-})
+  // resolve(
+  //   new MyPromise((resolve, reject) => {
+  //     resolve('promise success msg');
+  //   })
+  // );
+  resolve('promise success msg');
+}).then(value => {
+  console.log(value);
+});
+
+// const promise2 = promise1.then(value => {
+//   console.log('promise2.then.then onFulfilled value => ', value);
+// });
 
 // const promise = new MyPromise((resolve, reject) => {
 //   setTimeout(() => {
